@@ -14,9 +14,8 @@ class eZDateOrderContentObjectValidator
         return $this->Warnings;
     }
 
-    function isValid( &$object, $validationParameters )
+    function isValid( $object, $dataMap, $validationParameters )
     {
-        $dataMap =& $object->attribute( 'data_map' );
         $startDate = $dataMap['start_date']->attribute( 'content' );
         $endDate = $dataMap['end_date']->attribute( 'content' );
 

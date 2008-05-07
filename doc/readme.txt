@@ -1,23 +1,11 @@
 Installation
 --------------
 
+Enable the objectvalidation extension
+
 Move extension/objectvalidation/install/objectvalidation.ini to settings/objectvalidation.ini
 
-Put the following code in kernel/content/attribute_edit.php, before this line: "// After the object has been validated we can check for other actions"
-
-if ( $storingAllowed )
-{
-    include_once( 'extension/objectvalidation/classes/ezcontentobjectvalidator.php' );
-    $validation['business_rules'] = array();
-    $objectLevelValidationResult = eZContentObjectValidator::validate( $object, $validationParameters );
-    if ( $objectLevelValidationResult['warnings'] )
-    {
-        $validation['business_rules'] = $objectLevelValidationResult['warnings'];
-    }
-    $validation[ 'processed' ] = true;
-    $inputValidated = ( $inputValidated && $objectLevelValidationResult['validated'] );
-    //eZDebug::writeDebug( $inputValidated, 'input validated?' );
-}
+Patch your eZ Publish installation with extension/objectvalidation/install/attribute_edit.patch
 
 In your template code where you normally show any attribute validation errors (content/edit_validation.tpl) you should
 also use $validation.business_rules now in addition to $validation.attributes and $validation.placement. For an example

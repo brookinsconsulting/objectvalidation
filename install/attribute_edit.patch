@@ -1,0 +1,63 @@
+Index: kernel/content/attribute_edit.php
+===================================================================
+--- kernel/content/attribute_edit.php	(revision 21823)
++++ kernel/content/attribute_edit.php	(working copy)
+@@ -280,6 +280,7 @@
+     if ( !$inputValidated && $Module->exitStatus() == eZModule::STATUS_REDIRECT )
+         $Module->setExitStatus( eZModule::STATUS_OK );
+ 
++    $db = eZDB::instance();
+     if ( $inputValidated and count( $attributeInputMap ) > 0 )
+     {
+         if ( $Module->runHooks( 'pre_commit', array( $class, $object, $version, $contentObjectAttributes, $EditVersion, $EditLanguage, $FromLanguage ) ) )
+@@ -287,7 +288,6 @@
+         $version->setAttribute( 'modified', time() );
+         $version->setAttribute( 'status', eZContentObjectVersion::STATUS_DRAFT );
+ 
+-        $db = eZDB::instance();
+         $db->begin();
+         $version->store();
+ //         print( "storing<br/>" );
+@@ -365,6 +365,28 @@
+ 
+ }
+ 
++$contentObjectDataMap = array();
++foreach ( $contentObjectAttributes as $contentObjectAttribute )
++{
++    $contentObjectAttributeIdentifier = $contentObjectAttribute->attribute( 'contentclass_attribute_identifier' );
++    $contentObjectDataMap[$contentObjectAttributeIdentifier] = $contentObjectAttribute;
++}
++
++if ( $storingAllowed )
++{
++    include_once( 'extension/objectvalidation/classes/ezcontentobjectvalidator.php' );
++    $validation['business_rules'] = array();
++    $objectLevelValidationResult = eZContentObjectValidator::validate( $object, $contentObjectDataMap, $validationParameters );
++    if ( $objectLevelValidationResult['warnings'] )
++    {
++        $validation['business_rules'] = $objectLevelValidationResult['warnings'];
++    }
++    $validation[ 'processed' ] = true;
++    $inputValidated = ( $inputValidated && $objectLevelValidationResult['validated'] );
++    //eZDebug::writeDebug( $inputValidated, 'input validated?' );
++}
++
++
+ // After the object has been validated we can check for other actions
+ $Result = '';
+ if ( $inputValidated == true )
+@@ -432,13 +454,6 @@
+     eZSection::setGlobalID( $object->attribute( 'section_id' ) );
+ }
+ 
+-$contentObjectDataMap = array();
+-foreach ( $contentObjectAttributes as $contentObjectAttribute )
+-{
+-    $contentObjectAttributeIdentifier = $contentObjectAttribute->attribute( 'contentclass_attribute_identifier' );
+-    $contentObjectDataMap[$contentObjectAttributeIdentifier] = $contentObjectAttribute;
+-}
+-
+ $object->setCurrentLanguage( $EditLanguage );
+ 
+ $tpl->setVariable( 'edit_version', $EditVersion );

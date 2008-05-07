@@ -7,7 +7,7 @@
 */
 class eZContentObjectValidator
 {
-    function &instance( $type )
+    static function instance( $type )
     {
         $impl = false;
         $params = array(
@@ -26,7 +26,7 @@ class eZContentObjectValidator
 
         if ( $out['found-type'] == false )
         {
-            $cli->writeError( 'unable to find validation handler of type ' . $type );
+            eZDebug::writeError( 'unable to find validation handler of type ' . $type );
             return $impl;
         }
 
@@ -36,7 +36,7 @@ class eZContentObjectValidator
         return $impl;
     }
 
-    function validate( &$object, $validationParameters )
+    static function validate( $object, $dataMap, $validationParameters )
     {
         //eZDebug::writeDebug( $validationParameters );
         $result = array( 'validated' => true, 'warnings' => array() );
@@ -46,7 +46,7 @@ class eZContentObjectValidator
         $classIdentifier = $object->attribute( 'class_identifier' );
 
         include_once( 'lib/ezutils/classes/ezini.php' );
-        $ini =& eZINI::instance( 'objectvalidation.ini' );
+        $ini = eZINI::instance( 'objectvalidation.ini' );
         $groupName = 'Class_' . $classIdentifier;
 
         if ( $ini->hasGroup( $groupName ) && $ini->hasVariable( $groupName, 'Validators' ) )
@@ -55,10 +55,10 @@ class eZContentObjectValidator
 
             foreach ( $validators as $validatorName )
             {
-                $impl =& eZContentObjectValidator::instance( $validatorName );
+                $impl = eZContentObjectValidator::instance( $validatorName );
                 if ( $impl )
                 {
-                    $isValid = $impl->isValid( $object, $validationParameters );
+                    $isValid = $impl->isValid( $object, $dataMap, $validationParameters );
                     if ( !$isValid )
                     {
                         $newWarnings = $impl->getWarnings();
